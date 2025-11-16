@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <title>Classroom Dashboard</title>
+    <style>
+        /* Basic page styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f5f7;
+            color: #172b4d;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0052cc;
+        }
+
+        /* The Calendar Grid */
+        #calendar-dashboard {
+            display: grid;
+            /* 1 column for day labels, 7 for periods */
+            grid-template-columns: 0.8fr repeat(7, 1fr);
+            gap: 8px;
+            max-width: 1400px; /* Widened for 7 periods */
+            margin: 20px auto;
+            border: 1px solid #dfe1e6;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        /* Header cells for periods and the corner */
+        .grid-header, .grid-label {
+            background-color: #f4f5f7;
+            font-weight: 600;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 2px solid #0052cc;
+        }
+
+        /* Day labels on the side */
+        .grid-label {
+            font-weight: 600;
+            text-align: right;
+            padding-right: 15px;
+            border-bottom: 1px solid #dfe1e6;
+            border-right: 2px solid #0052cc;
+            /* Center the text vertically */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        /* The empty slots for classes */
+        .class-slot {
+            min-height: 120px;
+            padding: 8px;
+            border-bottom: 1px solid #dfe1e6;
+            border-right: 1px solid #dfe1e6;
+        }
+
+        /* Remove extra border on the last column */
+        .class-slot:nth-child(8n) {
+            border-right: none;
+        }
+
+        /* The card that represents a class */
+        .class-card {
+            background-color: #e6f0ff;
+            border: 1px solid #b3d1ff;
+            border-left: 5px solid #0052cc;
+            border-radius: 5px;
+            padding: 10px;
+            height: 100%;
+            box-sizing: border-box; /* Ensures padding doesn't break layout */
+        }
+
+        .class-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            color: #0052cc;
+        }
+
+        /* Status indicators */
+        .status-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .status-list li {
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .status-icon {
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+
+        .status-posted .status-icon {
+            color: #36b37e; /* Green */
+        }
+
+        .status-missing .status-icon {
+            color: #de350b; /* Red */
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Weekly Classroom Dashboard</h1>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button id="auth-button" style="padding: 10px 20px; font-size: 16px;">
+            Sign In & Load Dashboard
+        </button>
+    </div>
+    <div id="calendar-dashboard"></div>
+
+    <script>
+        // --- PART 1: API CONFIGURATION ---
+        // You MUST replace these with your own keys from the Google Cloud Console
+        const API_KEY = 'YAIzaSyDRgWy0ZC0Md5hoKU9iB_yQ4I19FjayH80';
+        const CLIENT_ID = '383682735540-cp9ho17fo9kof59a27odtsult4avc6im.apps.googleusercontent.com';
+        
+        // Scopes: What we're asking permission to read.
+        const SCOPES = 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.coursework.students.readonly';
+    
+        let gapi; // Will hold the Google API client
+        let google; // Will hold the Google Auth client
+    
+        const authButton = document.getElementById('auth-button');
+        const dashboard = document.getElementById('calendar-dashboard');
+    
+        // --- PART 2: AUTHENTICATION ---
+    
+        // This function is called when the Google API script first loads
+        function handleClientLoad() {
+            gapi = window.gapi;
+            gapi.load('client', start);
+        }
+    
+        // This initializes the API client
+        async function start() {
+            await gapi.client.init({
+                apiKey: API_KEY,
+            });
+            
+            // This sets up the Google Sign-In (OAuth) client
+            google = window.google;
+            const tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // We use a Promise, so callback is empty
+            });
+    
+            // When the auth button is clicked, start the sign-in flow
+            authButton.onclick = async () => {
+                const response = await new Promise((resolve, reject) => {
+                    try {
+                        tokenClient.callback = resolve;
+                        tokenClient.error_callback = reject;
+                        tokenClient.requestAccessToken();
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+                
+                // Set the access token for all future API calls
+                gapi.client.setToken(response);
+                
+                // Hide the button and show "Loading..."
+                authButton.textContent = "Loading Dashboard...";
+                authButton.disabled = true;
+    
+                // Now that we're signed in, load the dashboard!
+                await loadDashboard();
+            };
+        }
+    
+        // --- PART 3: THE NEW DASHBOARD LOGIC ---
+    
+        // This is the main function that fetches and processes your classes
+        async function loadDashboard() {
+            // First, build the empty calendar grid (same as before)
+            buildCalendarGrid();
+    
+            // Get the date for the start of this week (e.g., last Monday)
+            const startOfWeek = getStartOfWeek();
+    
+            try {
+                // 1. Fetch all of your courses
+                const coursesResponse = await gapi.client.classroom.courses.list({
+                    teacherId: 'me', // 'me' means the currently signed-in user
+                    courseStates: 'ACTIVE'
+                });
+    
+                const courses = coursesResponse.result.courses;
+                if (!courses || courses.length === 0) {
+                    dashboard.innerHTML = "<p>No active courses found.</p>";
+                    return;
+                }
+    
+                // 2. Process each course one by one
+                for (const course of courses) {
+                    // Find the right slot in our grid
+                    const targetSlot = findSlotForCourse(course.section);
+                    if (!targetSlot) {
+                        continue; // Skip this course if section is invalid
+                    }
+    
+                    // 3. For this course, find all work posted *this week*
+                    const hasPostedMaterial = await checkCourseWork(course.id, 'MATERIAL', startOfWeek);
+                    const hasPostedHomework = await checkCourseWork(course.id, 'ASSIGNMENT', startOfWeek);
+    
+                    // 4. Create the card with the *real* data
+                    const classData = {
+                        name: course.name,
+                        hasPostedMaterial: hasPostedMaterial,
+                        hasPostedHomework: hasPostedHomework
+                    };
+                    targetSlot.appendChild(createClassCard(classData));
+                }
+    
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                dashboard.innerHTML = `<p>Error loading dashboard. Check console for details.</p>`;
+            }
+        }
+    
+        // This new function checks for specific work types posted since a certain date
+        async function checkCourseWork(courseId, workType, sinceDate) {
+            let hasPosted = false;
+            try {
+                const workResponse = await gapi.client.classroom.courseWork.list({
+                    courseId: courseId,
+                    // We can't filter by date here, so we fetch all and check manually
+                });
+    
+                const allWork = workResponse.result.courseWork;
+                if (allWork) {
+                    // Check if any work matches our criteria
+                    hasPosted = allWork.some(work => {
+                        const workDate = new Date(work.creationTime);
+                        return work.workType === workType && workDate >= sinceDate;
+                    });
+                }
+            } catch (err) {
+                console.warn(`Could not check work for course ${courseId}`, err);
+            }
+            return hasPosted;
+        }
+    
+    
+        // --- PART 4: HELPER FUNCTIONS (Most are from our previous script) ---
+    
+        // Helper to get the date for the most recent Monday
+        function getStartOfWeek() {
+            const now = new Date();
+            const day = now.getDay(); // 0 = Sunday, 1 = Monday, ...
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+            const monday = new Date(now.setDate(diff));
+            monday.setHours(0, 0, 0, 0); // Set to midnight
+            return monday;
+        }
+    
+        // Helper to find the correct <div> in the grid
+        function findSlotForCourse(section) {
+            if (!section) return null;
+            
+            const parts = section.split(' ');
+            if (parts.length < 2) return null;
+    
+            const day = parts[0].toLowerCase();
+            const period = parts[1];
+            const slotId = `${day}-${period}`;
+    
+            return dashboard.querySelector(`[data-slot="${slotId}"]`);
+        }
+    
+        // This builds the empty grid structure
+        function buildCalendarGrid() {
+            const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+            const periods = [1, 2, 3, 4, 5, 6, 7];
+    
+            // 1. Create Header Row (Periods)
+            dashboard.appendChild(createHeaderCell("")); // Top-left corner
+            periods.forEach(period => {
+                dashboard.appendChild(createHeaderCell(`Period ${period}`));
+            });
+    
+            // 2. Create Grid Rows (Days vs Periods)
+            daysOfWeek.forEach(day => {
+                dashboard.appendChild(createDayLabel(day));
+                periods.forEach(period => {
+                    const slot = document.createElement("div");
+                    slot.className = "class-slot";
+                    slot.dataset.slot = `${day.toLowerCase()}-${period}`;
+                    dashboard.appendChild(slot);
+                });
+            });
+        }
+    
+        // (These functions are identical to our previous script)
+        function createHeaderCell(text) {
+            const cell = document.createElement("div");
+            cell.className = "grid-header";
+            cell.textContent = text;
+            return cell;
+        }
+    
+        function createDayLabel(day) {
+            const label = document.createElement("div");
+            label.className = "grid-label";
+            label.textContent = day;
+            return label;
+        }
+    
+        function createClassCard(classData) {
+            const card = document.createElement("div");
+            card.className = "class-card";
+    
+            const materialStatus = classData.hasPostedMaterial 
+                ? { class: 'status-posted', icon: '✔', text: 'Material' }
+                : { class: 'status-missing', icon: '✖', text: 'Material' };
+            
+            const homeworkStatus = classData.hasPostedHomework
+                ? { class: 'status-posted', icon: '✔', text: 'Homework' }
+                : { class: 'status-missing', icon: '✖', text: 'Homework' };
+    
+            card.innerHTML = `
+                <h3>${classData.name}</h3>
+                <ul class="status-list">
+                    <li class="${materialStatus.class}">
+                        <span class="status-icon">${materialStatus.icon}</span>
+                        ${materialStatus.text}
+                    </li>
+                    <li class="${homeworkStatus.class}">
+                        <span class="status-icon">${homeworkStatus.icon}</span>
+                        ${homeworkStatus.text}
+                    </li>
+                </ul>
+            `;
+            return card;
+        }
+    
+    </script>
+    
+    <script async defer src="https://accounts.google.com/gsi/client" onload="handleClientLoad()"></script>
+</body>
+</html>
