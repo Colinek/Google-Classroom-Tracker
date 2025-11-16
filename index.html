@@ -154,6 +154,8 @@
             await gapi.client.init({
                 apiKey: API_KEY,
             });
+
+            await gapi.client.load('classroom', 'v1'); // Loads the Classroom API methods
             
             // This sets up the Google Sign-In (OAuth) client
             google = window.google;
