@@ -253,9 +253,8 @@
             }
         }
         
-        
-        
         // Function to check for specific work types posted since a certain date
+        // REVISED FUNCTION: Checks the correct API endpoints
         async function checkCourseWork(courseId, workType, sinceDate) {
             let allItems = []; // This will hold the results
 
@@ -265,7 +264,7 @@
                     const response = await gapi.client.classroom.courses.courseWork.list({
                         courseId: courseId,
                         orderBy: "updateTime desc" // Get newest first
-              _     });
+                    });
                     if (response.result.courseWork) {
                         allItems = response.result.courseWork;
                     }
@@ -273,24 +272,24 @@
                     // 2. Use the 'courseWorkMaterials' endpoint for materials
                     const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
                         courseId: courseId,
-                        orderBy: "updateTime desc" // Get newest first
-_                     });
+                _       orderBy: "updateTime desc" // Get newest first
+                    });
                     if (response.result.courseWorkMaterial) {
                         allItems = response.result.courseWorkMaterial;
-            _       }
+                    }
                 }
 
                 // 3. Now check the items we found
                 if (allItems.length > 0) {
                     return allItems.some(item => {
-                      _ const workDate = new Date(item.creationTime);
+                        const workDate = new Date(item.creationTime);
                         // Check if the item was created *after* the start of the week
                         return workDate >= sinceDate;
-                    });
+              _     });
                 }
 
-            } catch (err) {
-Err           // This will now show us any *new* errors in the console
+    _       } catch (err) {
+                // This will now show us any *new* errors in the console
                 console.error(`Could not check work type ${workType} for course ${courseId}`, err);
             }
             
