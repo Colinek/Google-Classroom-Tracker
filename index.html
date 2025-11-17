@@ -123,6 +123,10 @@
         <button id="auth-button" style="padding: 10px 20px; font-size: 16px;">
             Sign In & Load Dashboard
         </button>
+        
+        <button id="refresh-button" style="padding: 10px 20px; font-size: 16px; margin-left: 10px; display: none;">
+            Refresh Data
+        </button>
     </div>
     <div id="calendar-dashboard"></div>
 
@@ -139,6 +143,7 @@
         let google; // Will hold the Google Auth client
     
         const authButton = document.getElementById('auth-button');
+        const refreshButton = document.getElementById('refresh-button');
         const dashboard = document.getElementById('calendar-dashboard');
     
         // --- PART 2: AUTHENTICATION ---
@@ -193,6 +198,11 @@
     
         // This is the main function that fetches and processes your classes
         async function loadDashboard() {
+            // --- Before fetching data ---
+                dashboard.innerHTML = ''; // Clear the old cards
+                authButton.style.display = 'none'; // Hide sign-in button
+                refreshButton.style.display = 'inline-block'; // Show refresh button
+            
             // First, build the empty calendar grid (same as before)
             buildCalendarGrid();
     
@@ -238,7 +248,9 @@
                 dashboard.innerHTML = `<p>Error loading dashboard. Check console for details.</p>`;
             }
         }
-    
+        
+        
+        
         // This new function checks for specific work types posted since a certain date
         async function checkCourseWork(courseId, workType, sinceDate) {
             let hasPosted = false;
@@ -354,7 +366,7 @@
             `;
             return card;
         }
-    
+    refreshButton.onclick = loadDashboard; // This simply re-runs the whole data fetch!
     </script>
     
     <script async defer src="https://accounts.google.com/gsi/client" onload="handleClientLoad()"></script>
