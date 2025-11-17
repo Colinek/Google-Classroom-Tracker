@@ -258,27 +258,23 @@
         }
         
         // Function to check for specific work types posted since a certain date
-        // REVISED FUNCTION: Checks the correct API endpoints
-        // REVISED FUNCTION: Checks the correct API endpoints
-        // FINAL REVISED FUNCTION: Uses correct endpoint for each scope
+        // Aligns all API calls with teacher-level scopes
         async function checkCourseWork(courseId, workType, sinceDate) {
             let allItems = []; // This will hold the results
 
             try {
                 if (workType === 'ASSIGNMENT') {
-                    // 1. Use the 'courseWork' endpoint (linked to the .me.readonly scope)
-                    // This is the one that was in your original code
-                    const response = await gapi.client.classroom.courseWork.list({
+                    // 1. Use the TEACHER endpoint: 'courses.courseWork.list'
+                    // This now matches your '...coursework.students.readonly' scope
+                    const response = await gapi.client.classroom.courses.courseWork.list({
                         courseId: courseId,
-                        // This endpoint uses a different parameter name for ordering
                         orderBy: "updateTime desc" 
                     });
                     if (response.result.courseWork) {
                         allItems = response.result.courseWork;
                     }
                 } else if (workType === 'MATERIAL') {
-                    // 2. Use the 'courseWorkMaterials' endpoint (linked to the .courseworkmaterials.readonly scope)
-                    // This is the one that is currently working
+                    // 2. Use the TEACHER endpoint: 'courses.courseWorkMaterials.list' (this has been working)
                     const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
                         courseId: courseId,
                         orderBy: "updateTime desc"
@@ -304,6 +300,7 @@
             
             return false; // Default to false if nothing is found or an error occurs
         }
+        
     
     
         // --- PART 4: HELPER FUNCTIONS (Most are from our previous script) ---
