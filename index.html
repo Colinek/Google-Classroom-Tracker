@@ -137,7 +137,8 @@
         const CLIENT_ID = '383682735540-cp9ho17fo9kof59a27odtsult4avc6im.apps.googleusercontent.com';
         
         // Scopes: What we're asking permission to read.
-        const SCOPES = 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.coursework.students.readonly';
+        // THIS IS THE NEW, CORRECT LINE:
+        const SCOPES = 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.readonly https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly';
     
         let gapi; // Will hold the Google API client
         let google; // Will hold the Google Auth client
