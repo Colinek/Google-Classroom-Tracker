@@ -255,46 +255,47 @@
         
         // Function to check for specific work types posted since a certain date
         // REVISED FUNCTION: Checks the correct API endpoints
-        async function checkCourseWork(courseId, workType, sinceDate) {
-            let allItems = []; // This will hold the results
+        // REVISED FUNCTION: Checks the correct API endpoints
+        async function checkCourseWork(courseId, workType, sinceDate) {
+            let allItems = []; // This will hold the results
 
-            try {
-                if (workType === 'ASSIGNMENT') {
-                    // 1. Use the 'courseWork' endpoint for assignments
-                    const response = await gapi.client.classroom.courses.courseWork.list({
-                        courseId: courseId,
-                        orderBy: "updateTime desc" // Get newest first
-                    });
-                    if (response.result.courseWork) {
-                        allItems = response.result.courseWork;
-                    }
-                } else if (workType === 'MATERIAL') {
-                    // 2. Use the 'courseWorkMaterials' endpoint for materials
-                    const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
-                        courseId: courseId,
-                        orderBy: "updateTime desc" // Get newest first
-                    });
-                    if (response.result.courseWorkMaterial) {
-                        allItems = response.result.courseWorkMaterial;
-                    }
-                }
+            try {
+                if (workType === 'ASSIGNMENT') {
+                    // 1. Use the 'courseWork' endpoint for assignments
+                    const response = await gapi.client.classroom.courses.courseWork.list({
+                        courseId: courseId,
+                        orderBy: "updateTime desc" // Get newest first
+                    });
+                    if (response.result.courseWork) {
+                        allItems = response.result.courseWork;
+                    }
+                } else if (workType === 'MATERIAL') {
+                    // 2. Use the 'courseWorkMaterials' endpoint for materials
+                    const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
+                        courseId: courseId,
+                        orderBy: "updateTime desc" // Get newest first
+                    });
+                    if (response.result.courseWorkMaterial) {
+                        allItems = response.result.courseWorkMaterial;
+                    }
+                }
 
-                // 3. Now check the items we found
-                if (allItems.length > 0) {
-                    return allItems.some(item => {
-                        const workDate = new Date(item.creationTime);
-                        // Check if the item was created *after* the start of the week
-                        return workDate >= sinceDate;
-                   });
-                }
+                // 3. Now check the items we found
+                if (allItems.length > 0) {
+                    return allItems.some(item => {
+                        const workDate = new Date(item.creationTime);
+                        // Check if the item was created *after* the start of the week
+                        return workDate >= sinceDate;
+                    });
+                }
 
-            } catch (err) {
-                // This will now show us any *new* errors in the console
-                console.error(`Could not check work type ${workType} for course ${courseId}`, err);
-            }
-            
-            return false; // Default to false if nothing is found or an error occurs
-        }
+            } catch (err) {
+                // This will now show us any *new* errors in the console
+                console.error(`Could not check work type ${workType} for course ${courseId}`, err);
+            }
+            
+            return false; // Default to false if nothing is found or an error occurs
+        }
     
     
         // --- PART 4: HELPER FUNCTIONS (Most are from our previous script) ---
