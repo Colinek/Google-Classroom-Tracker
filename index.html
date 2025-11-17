@@ -265,7 +265,7 @@
                     const response = await gapi.client.classroom.courses.courseWork.list({
                         courseId: courseId,
                         orderBy: "updateTime desc" // Get newest first
-                    });
+              _     });
                     if (response.result.courseWork) {
                         allItems = response.result.courseWork;
                     }
@@ -274,23 +274,23 @@
                     const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
                         courseId: courseId,
                         orderBy: "updateTime desc" // Get newest first
-                    });
-              _      if (response.result.courseWorkMaterial) {
+_                     });
+                    if (response.result.courseWorkMaterial) {
                         allItems = response.result.courseWorkMaterial;
-                    }
+            _       }
                 }
 
                 // 3. Now check the items we found
                 if (allItems.length > 0) {
                     return allItems.some(item => {
-                        const workDate = new Date(item.creationTime);
+                      _ const workDate = new Date(item.creationTime);
                         // Check if the item was created *after* the start of the week
                         return workDate >= sinceDate;
                     });
                 }
 
             } catch (err) {
-                // This will now show us any *new* errors in the console
+Err           // This will now show us any *new* errors in the console
                 console.error(`Could not check work type ${workType} for course ${courseId}`, err);
             }
             
