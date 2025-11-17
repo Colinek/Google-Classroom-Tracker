@@ -258,31 +258,35 @@
         // Function to check for specific work types posted since a certain date
         // REVISED FUNCTION: Checks the correct API endpoints
         // REVISED FUNCTION: Checks the correct API endpoints
+        // FINAL REVISED FUNCTION: Uses correct endpoint for each scope
         async function checkCourseWork(courseId, workType, sinceDate) {
             let allItems = []; // This will hold the results
 
             try {
                 if (workType === 'ASSIGNMENT') {
-                    // 1. Use the 'courseWork' endpoint for assignments
-                    const response = await gapi.client.classroom.courses.courseWork.list({
+                    // 1. Use the 'courseWork' endpoint (linked to the .me.readonly scope)
+                    // This is the one that was in your original code
+                    const response = await gapi.client.classroom.courseWork.list({
                         courseId: courseId,
-                        orderBy: "updateTime desc" // Get newest first
+                        // This endpoint uses a different parameter name for ordering
+                        orderBy: "updateTime desc" 
                     });
                     if (response.result.courseWork) {
                         allItems = response.result.courseWork;
                     }
                 } else if (workType === 'MATERIAL') {
-                    // 2. Use the 'courseWorkMaterials' endpoint for materials
+                    // 2. Use the 'courseWorkMaterials' endpoint (linked to the .courseworkmaterials.readonly scope)
+                    // This is the one that is currently working
                     const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
                         courseId: courseId,
-                        orderBy: "updateTime desc" // Get newest first
+                        orderBy: "updateTime desc"
                     });
                     if (response.result.courseWorkMaterial) {
                         allItems = response.result.courseWorkMaterial;
                     }
                 }
 
-                // 3. Now check the items we found
+                // 3. Now check the items we found (this logic is the same)
                 if (allItems.length > 0) {
                     return allItems.some(item => {
                         const workDate = new Date(item.creationTime);
