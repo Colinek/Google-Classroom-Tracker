@@ -138,7 +138,8 @@
         
         // Scopes: What we're asking permission to read.
         // THIS IS THE NEW, CORRECT LINE:
-        const SCOPES = 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.readonly https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly';
+        // THIS IS THE NEW, CORRECT LINE:
+        const SCOPES = 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly';
     
         let gapi; // Will hold the Google API client
         let google; // Will hold the Google Auth client
