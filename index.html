@@ -237,6 +237,7 @@
                     // 4. Create the card with the *real* data
                     const classData = {
                         name: course.name,
+                        link: course.alternateLink,
                         hasPostedMaterial: hasPostedMaterial,
                         hasPostedHomework: hasPostedHomework
                     };
@@ -352,20 +353,24 @@
                 : { class: 'status-missing', icon: '✖', text: 'Homework' };
     
             card.innerHTML = `
-                <h3>${classData.name}</h3>
-                <ul class="status-list">
-                    <li class="${materialStatus.class}">
-                        <span class="status-icon">${materialStatus.icon}</span>
-                        ${materialStatus.text}
-                    </li>
-                    <li class="${homeworkStatus.class}">
-                        <span class="status-icon">${homeworkStatus.icon}</span>
-                        ${homeworkStatus.text}
-                    </li>
-                </ul>
-            `;
-            return card;
-        }
+        <a href="${classData.link}" 
+           target="_blank" 
+           style="text-decoration: none; color: inherit;"> 
+           <h3>${classData.name}</h3>
+        </a>
+        <ul class="status-list">
+            <li class="${materialStatus.class}">
+                <span class="status-icon">${materialStatus.icon}</span>
+                ${materialStatus.text}
+            </li>
+            <li class="${homeworkStatus.class}">
+                <span class="status-icon">${homeworkStatus.icon}</span>
+                ${homeworkStatus.text}
+            </li>
+        </ul>
+    `;
+    return card;
+}
     refreshButton.onclick = loadDashboard; // This simply re-runs the whole data fetch!
     </script>
     
