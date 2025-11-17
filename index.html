@@ -272,7 +272,7 @@
                     // 2. Use the 'courseWorkMaterials' endpoint for materials
                     const response = await gapi.client.classroom.courses.courseWorkMaterials.list({
                         courseId: courseId,
-                _       orderBy: "updateTime desc" // Get newest first
+                        orderBy: "updateTime desc" // Get newest first
                     });
                     if (response.result.courseWorkMaterial) {
                         allItems = response.result.courseWorkMaterial;
@@ -285,10 +285,10 @@
                         const workDate = new Date(item.creationTime);
                         // Check if the item was created *after* the start of the week
                         return workDate >= sinceDate;
-              _     });
+                   });
                 }
 
-    _       } catch (err) {
+            } catch (err) {
                 // This will now show us any *new* errors in the console
                 console.error(`Could not check work type ${workType} for course ${courseId}`, err);
             }
