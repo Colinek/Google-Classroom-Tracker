@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- <script src="https://apis.google.com/js/api.js"></script> -->
     <title>Classroom Dashboard</title>
     <style>
         /* Basic page styling */
@@ -156,9 +156,9 @@
     
         // This initializes the API client
         async function start() {
-            await gapi.client.init({
-                apiKey: API_KEY,
-            });
+            // await gapi.client.init({
+            //     apiKey: API_KEY,
+            // });
 
             await gapi.client.load('classroom', 'v1'); // Loads the Classroom API methods
             
